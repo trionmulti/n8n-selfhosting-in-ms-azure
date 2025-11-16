@@ -1,0 +1,44 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=strongpassword
+      - N8N_HOST=yourdomain.com
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://yourdomain.com/
+      - GENERIC_TIMEZONE=Africa/Nairobi
+      - NODE_ENV=production
+      - DB_TYPE=sqlite
+      - DB_SQLITE_VACUUM_ON_STARTUP=true
+      - N8N_TRUSTED_PROXIES=loopback,linklocal,uniquelocal
+      - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
+      - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    networks:
+      - n8n-network
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+    networks:
+      - n8n-network
+
+networks:
+  n8n-network:
+    driver: bridge

@@ -227,5 +227,5 @@ This deployment guide is based on real debugging done while hosting n8n via Dock
 
 ---
 
-**This document is ready for use in your GitHub repository.**
+**This document is ready for use.**
 

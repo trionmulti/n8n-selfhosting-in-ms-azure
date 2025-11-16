@@ -1,0 +1,25 @@
+┌──────────────────────────────┐
+│        Microsoft Azure VM    │
+│  Ubuntu 24.04 LTS            │
+│  Public IP + Firewall Rules  │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│         Docker Engine        │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌───────────────────────────────────────────────┐
+│ docker-compose stack:                         │
+│                                               │
+│  • n8n container (port 5678 internal)         │
+│  • Caddy container (ports 80/443 public)      │
+│  • Shared docker network                      │
+└───────────────────────────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────---┐
+│   https://yourdomain.duckdns.org│
+│   Encrypted n8n Editor Access   │
+└──────────────────────────────   ┘

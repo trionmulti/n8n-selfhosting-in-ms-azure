@@ -5,6 +5,7 @@ This guide provides a complete, professional walkthrough of deploying **n8n** on
 ---
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
 3. [Step 1 — Create Azure Virtual Machine](#step-1--create-azure-virtual-machine)
@@ -21,35 +22,42 @@ This guide provides a complete, professional walkthrough of deploying **n8n** on
 ---
 
 ## Overview
+
 You will:
-- Deploy an Ubuntu VM in Azure
-- Install Docker & Docker Compose
-- Run **n8n** in a Docker container
-- Use **Caddy** to provide automatic HTTPS via Let's Encrypt
-- Access your n8n instance via **https://your-domain.com**
+
+* Deploy an Ubuntu VM in Azure
+* Install Docker & Docker Compose
+* Run **n8n** in a Docker container
+* Use **Caddy** to provide automatic HTTPS via Let's Encrypt
+* Access your n8n instance via **[https://your-domain.com](https://your-domain.com)**
 
 ---
 
 ## Prerequisites
-- An Azure account
-- A domain name (any registrar)
-- Basic Linux & SSH familiarity
+
+* An Azure account
+* A domain name (any registrar)
+* Basic Linux & SSH familiarity
 
 ---
 
 ## Step 1 — Create Azure Virtual Machine
+
 1. Log in to **Azure Portal**.
 2. Create a **Virtual Machine**:
-   - Image: **Ubuntu 22.04 LTS**
-   - Size: Standard B1s or higher
-   - Authentication: SSH key recommended
+
+   * Image: **Ubuntu 22.04 LTS**
+   * Size: Standard B1s or higher
+   * Authentication: SSH key recommended
 3. Networking:
-   - Open ports: **22**, **80**, **443**
+
+   * Open ports: **22**, **80**, **443**
 4. Create and launch the VM.
 
 ---
 
 ## Step 2 — Connect to the VM
+
 Use SSH from your terminal:
 
 ```bash
@@ -65,19 +73,24 @@ sudo apt update && sudo apt upgrade -y
 ---
 
 ## Step 3 — Install Dependencies
+
 ### Install Docker
+
 ```bash
 curl -fsSL https://get.docker.com | sudo bash
 sudo usermod -aG docker $USER
 ```
+
 Reboot or re-login.
 
 ### Install Docker Compose
+
 ```bash
 sudo apt install docker-compose-plugin -y
 ```
 
 ### Install Caddy
+
 ```bash
 sudo apt install -y debian-keyring debian-archive-keyring
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo tee /usr/share/keyrings/caddy-stable-archive-keyring.gpg >/dev/null
@@ -89,6 +102,7 @@ sudo apt install caddy -y
 ---
 
 ## Step 4 — Set Up n8n With Docker Compose
+
 Create project folder:
 
 ```bash
@@ -130,6 +144,7 @@ docker ps
 ---
 
 ## Step 5 — Set Up Caddy Reverse Proxy
+
 Edit Caddy config:
 
 ```bash
@@ -155,12 +170,13 @@ Caddy automatically issues an HTTPS certificate.
 ---
 
 ## Step 6 — Configure DNS
+
 Go to your domain registrar (Namecheap, Cloudflare, etc.).
 
 Add A record:
 
-| Type | Host | Value | TTL |
-|------|------|--------|------|
+| Type | Host | Value             | TTL  |
+| ---- | ---- | ----------------- | ---- |
 | A    | @    | YOUR_VM_PUBLIC_IP | Auto |
 
 Wait 5–15 minutes.
@@ -168,6 +184,7 @@ Wait 5–15 minutes.
 ---
 
 ## Step 7 — Start Services
+
 Visit:
 
 ```
@@ -179,35 +196,46 @@ Your n8n editor should load.
 ---
 
 ## Troubleshooting & Errors Encountered
+
 ### ❗ Error: Port 80 Already in Use
+
 When checking:
 
 ```bash
 sudo lsof -i :80
 ```
+
 Output:
+
 ```
 docker-pr ... TCP *:http (LISTEN)
 ```
+
 **Meaning**: A Docker container was already using port 80.
 
 **Fix**:
-- Identify container: `docker ps`
-- Stop it: `docker stop <ID>`
-- Free the port, then restart Caddy.
+
+* Identify container: `docker ps`
+* Stop it: `docker stop <ID>`
+* Free the port, then restart Caddy.
 
 ### ❗ Caddy Not Issuing SSL Certificate
+
 Causes:
-- DNS not propagated
-- Port 80 blocked
+
+* DNS not propagated
+* Port 80 blocked
 
 Fix:
-- Ensure Azure Network Security Group allows ports 80 & 443
-- Wait up to 10 mins for DNS changes
+
+* Ensure Azure Network Security Group allows ports 80 & 443
+* Wait up to 10 mins for DNS changes
 
 ### ❗ n8n Not Loading After Proxy Setup
+
 Cause:
-- Missing environment variables (HOST, PROTOCOL, WEBHOOK_URL)
+
+* Missing environment variables (HOST, PROTOCOL, WEBHOOK_URL)
 
 Fix:
 Add proper environment values inside Docker Compose.
@@ -215,17 +243,90 @@ Add proper environment values inside Docker Compose.
 ---
 
 ## Security Recommendations
-- Use a firewall (UFW) allowing only 22, 80, 443
-- Enable Fail2Ban for SSH
-- Use Azure-managed backups for persistence
-- Store secrets using n8n credentials, not environment variables
+
+* Use a firewall (UFW) allowing only 22, 80, 443
+* Enable Fail2Ban for SSH
+* Use Azure-managed backups for persistence
+* Store secrets using n8n credentials, not environment variables
 
 ---
 
 ## Credits
+
 This deployment guide is based on real debugging done while hosting n8n via Docker and Caddy on Azure, including port conflicts, DNS propagation delays, and SSL issues.
 
 ---
 
-**This document is ready for use.**
+**This document is ready for use in your GitHub repository.**
 
+---
+
+# 📌 TL;DR (Quick Summary)
+
+* Create Azure VM → Install Docker & Docker Compose → Set up **n8n** + **Caddy** reverse proxy → Configure DuckDNS domain → Bring containers up → Enjoy secure HTTPS hosting.
+* Common issues include Docker conflicts, port 80 already in use, outdated Docker Compose, or DuckDNS not updating.
+
+---
+
+# 📊 System Architecture (Diagram)
+
+```mermaid
+graph TD;
+    A[User Browser] -->|HTTPS| B[Caddy Reverse Proxy];
+    B -->|Proxy to :5678| C[n8n Container];
+    D[Azure VM Ubuntu] --> B;
+    D --> C;
+    E[DuckDNS Domain] --> B;
+```
+
+---
+
+# 🚀 Quick Deploy Script (Simplifies Setup)
+
+```bash
+# Update & install Docker
+sudo apt update && sudo apt upgrade -y
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Install Docker Compose Plugin
+sudo apt install docker-compose-plugin -y
+
+# Create directories
+mkdir ~/n8n && cd ~/n8n
+
+# Pull n8n
+sudo docker compose pull n8n
+
+# Start stack
+sudo docker compose up -d
+```
+
+---
+
+# 🩺 Troubleshooting Table
+
+| Issue                               | Cause                             | Fix                                                         |
+| ----------------------------------- | --------------------------------- | ----------------------------------------------------------- |
+| Port 80 already in use              | Old Caddy container still running | `sudo docker rm -f <container>` then `docker compose up -d` |
+| n8n version not updating            | Old container still exists        | Remove container + recreate stack                           |
+| DuckDNS domain not resolving        | IP not updated                    | Force update via DuckDNS token URL                          |
+| Caddy reload stuck                  | Wrong JSON config                 | Validate with `caddy validate --config`                     |
+| Workflow node can't fetch workflows | Cloud-only feature                | Not available in self-hosted                                |
+
+---
+
+# 📝 License
+
+```
+MIT License
+```
+
+---
+
+# 👥 Credits
+
+* Author: BRUCE
+* Reference: ChatGPT
+* Hosting Stack: Docker, Caddy, n8n, Azure VM
